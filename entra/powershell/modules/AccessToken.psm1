@@ -24,7 +24,7 @@ function getAccessTokenByPrompt(){
 
     ## Use secret to aquire an access token
     #### Build REST parameters
-    $at_uri = "https://login.microsoftonline.com/$azure_tenant/oauth2/token"
+    $at_uri = "https://login.microsoftonline.com/$azure_tenant/oauth2/v2.0/token"
     $at_body = "grant_type=client_credentials&scope=https://graph.microsoft.com/.default&client_id=$client_id&client_secret=$psk"
 
     #### Send REST request
