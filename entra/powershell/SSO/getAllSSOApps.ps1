@@ -21,13 +21,29 @@ $accesstoken = getAccessTokenByPrompt
 $api_headers = @{
     "Content-Type" = "application/json"
     "Authorization" = "Bearer " + $accesstoken.bearer
+    "ConsistencyLevel" = "eventual"
 }
 
-$api_headers.Authorization
 ## Obtain list of Applications in Entra ID
-$api_uri = "https://graph.microsoft.com/beta/applications"
+# Create API request
+$api_filter = "`$filter=NOT(publisherName eq 'Microsoft Services')&`$count=true&`$top=999" ## Filter excludes first-party apps
+$api_uri = "https://graph.microsoft.com/beta/servicePrincipals?$api_filter"
+
+# Call API request
 $app_response = Invoke-RestMethod -Uri $api_uri -Method GET -Headers $api_headers
-$app_response.value
-$app_response.value[0]
+
+# Conform response
+$internalapps = $app_response.value | Select-Object publisherName,id,accountEnabled,createdDateTIme,appDisplayName,appId,appRoleAssignmentRequired,preferredSingleSignOnMode,replyUrls,signInAudience,servicePrincipalType,keyCredentials,passwordCredentials | Where-Object {$_.publisherName -ne "Microsoft Services"}
+
+$internalapps[0]
+## Filter for applications that are enabled
+## Filter by publisherName ## Any app not using your tenant ID was most likely added using the Admin Consent Flow or is a first-party app
+# First-party publisherNames to ignore
+$publisherName_exclusions = @( ## This is an array of publisherNames that will be filtered out
+    'Active Directory Application Registry',
+    'MS Azure Cloud'
+)
+## Filter by signInAudience
 ## Filter for applications with SSO configured (SAML/OIDC)
 ## Export to CSV
+# | Export-Csv -NoTypeInformation -Path "F:\Code\exports\exports.csv"
